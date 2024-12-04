@@ -1,0 +1,72 @@
+# Web-honeypot
+# Robert Lynch - rob@rlyn.ch
+# March 2021
+
+version: '3.4'
+x-common-variables: &common-variables
+  MYSQL_ROOT_PASSWORD: 'honeypotR00t'
+  DATABASE_HOST: 'database'
+
+services:
+  database:
+    container_name: database
+    restart: always
+    image: mysql:latest
+    environment:
+      <<: *common-variables
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d/:ro
+      - databasevolume:/var/lib/mysql
+    ports:
+        - "3306:3306"
+  honeypot:
+    depends_on:
+        - database
+    build:
+        context: ./
+        dockerfile: honeypot/Dockerfile
+    container_name: honeypot
+    restart: always
+    environment:
+      <<: *common-variables
+      PORT: '80'
+    ports:
+        - "80:80"
+  api:
+    depends_on:
+      - database
+    build:
+        context: ./
+        dockerfile: api/Dockerfile
+    container_name: api
+    restart: always
+    environment:
+      <<: *common-variables
+      API_TOKEN: "InsertSecureAPIkeyInThisVariable"
+      PORT: '81'
+    ports:
+        - "81:81"
+  grafana:
+    container_name: grafana
+    restart: always
+    depends_on:
+        - database
+    image: grafana/grafana:latest
+    environment:
+      <<: *common-variables
+      DB_HOST: "database"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ./grafana/honeypot-dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+      - grafanavolume_data/:/var/lib/grafana
+      - grafanavolume_conf/:/etc/grafana
+      - grafanavolume_log/:/var/log/grafana
+volumes:
+  databasevolume:
+  grafanavolume_data:
+  grafanavolume_conf:
+  grafanavolume_log:
