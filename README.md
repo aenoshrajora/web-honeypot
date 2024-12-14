@@ -53,4 +53,4 @@ Entries in the database, I've censored my IP address.
 Grafana dashboard.
 
 # Future Enhancements
-For enhancements open an [issue](https://github.com/rml596/web-honeypot/issues).
+For enhancements open an [issue](https://github.com/aenoshrajora/web-honeypot/issues).
